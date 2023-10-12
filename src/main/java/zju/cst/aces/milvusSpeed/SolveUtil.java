@@ -6,27 +6,25 @@ import org.openlca.npy.NpyFloatArray;
 
 import java.io.File;
 
-import static java.lang.Math.random;
-
 public class SolveUtil {
     public static void buildData(String loc) {
         File file = new File(loc);
 
         NpyFloatArray npyArray = Npy.read(file).asFloatArray();
-        for(int i = 0; i < npyArray.shape()[0]; i++){
+        for (int i = 0; i < npyArray.shape()[0]; i++) {
             float[] vector = Array2d.getRow(npyArray, i);
             MilvusUtil.insertData(vector);
         }
     }
-    public static void testData() {
-        float[] vector = new float[768];
+
+    public static void testData(String loc) {
+        File file = new File(loc);
         long times = 0;
-        for(int cnt = 0; cnt < 1000; cnt++){
-            for(int i = 0; i < 768; i++){
-                vector[i] = (float) random();
-            }
+        NpyFloatArray npyArray = Npy.read(file).asFloatArray();
+        for (int i = 0; i < npyArray.shape()[0]; i++) {
+            float[] vector = Array2d.getRow(npyArray, i);
             times += MilvusUtil.search(vector);
         }
-        System.out.println("cnt: 100, avg: " + times / 1000.0);
+        System.out.println("cnt: " + npyArray.shape()[0] + ", avg: " + times * 1.0 / npyArray.shape()[0]);
     }
 }

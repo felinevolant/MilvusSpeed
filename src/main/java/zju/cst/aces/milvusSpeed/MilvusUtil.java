@@ -115,18 +115,23 @@ public class MilvusUtil {
 
     public static void insertData(float[] vector) {
 
-
         List<Field> fields = new ArrayList<>();
-        fields.add(new InsertParam.Field("simHashCode", floatToList(vector)));
+        fields.add(new InsertParam.Field("vector", floatToList(vector)));
         insert(fields);
 
     }
 
 
     private static void initCollection() {
+        FieldType codeID = FieldType.newBuilder()
+                .withName("codeID")
+                .withDataType(DataType.Int64)
+                .withPrimaryKey(true)
+                .withAutoID(true)
+                .build();
         FieldType vector = FieldType.newBuilder()
                 .withName("vector")
-                .withDataType(DataType.BinaryVector)
+                .withDataType(DataType.FloatVector)
                 .withDimension(128)
                 .build();
 
@@ -134,6 +139,7 @@ public class MilvusUtil {
                 .withCollectionName(MILVUS_COLLECTION)
                 .withDescription("test")
                 .withShardsNum(2)
+                .addFieldType(codeID)
                 .addFieldType(vector)
                 .build();
         init(createCollectionReq);
@@ -142,7 +148,7 @@ public class MilvusUtil {
     private static void init(CreateCollectionParam createCollectionReq) {
         String collectionName = createCollectionReq.getCollectionName();
         milvusClient.createCollection(createCollectionReq);
-        final IndexType INDEX_TYPE = IndexType.BIN_FLAT;
+        final IndexType INDEX_TYPE = IndexType.IVF_SQ8;
         final String INDEX_PARAM = "{\"nlist\":16384}";
         milvusClient.createIndex(
                 CreateIndexParam.newBuilder()
@@ -172,12 +178,14 @@ public class MilvusUtil {
     }
 
     public static long search(float[] vector) {
-        final String SEARCH_PARAM = "{\"nprobe\":50}";
+        final String SEARCH_PARAM = "{\"nprobe\":10}";
         SearchParam searchParam;
+        List<String> search_output_fields = List.of("codeID");
         searchParam = SearchParam.newBuilder()
                 .withCollectionName(MILVUS_COLLECTION)
                 .withConsistencyLevel(ConsistencyLevelEnum.EVENTUALLY)
-                .withMetricType(MetricType.HAMMING)
+                .withMetricType(MetricType.L2)
+                .withOutFields(search_output_fields)
                 .withTopK(SEARCH_K)
                 .withVectors(floatToList(vector))
                 .withVectorFieldName("vector")

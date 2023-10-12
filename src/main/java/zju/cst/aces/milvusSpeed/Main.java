@@ -8,18 +8,22 @@ public class Main {
             case "insert-data":
                 SolveUtil.buildData(args[1]);
                 System.out.println("insert over");
+                break;
             case "rebuild-data":
                 MilvusUtil.rebuild();
                 System.out.println("rebuild over");
+                break;
             case "get-data-num":
                 System.out.println(MilvusUtil.getVectorNum());
+                break;
             case "flush-data":
                 MilvusUtil.flushData();
                 System.out.println("flush over");
+                break;
             case "test-data":
-                SolveUtil.testData();
+                SolveUtil.testData(args[1]);
                 System.out.println("test over");
-
+                break;
         }
     }
 }
