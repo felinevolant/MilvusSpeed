@@ -6,7 +6,7 @@ public class Main {
             return;
         switch (args[0]) {
             case "insert-data":
-                SolveUtil.buildData(args[1]);
+                SolveUtil.buildData(args[1], args[2]);
                 System.out.println("insert over");
                 break;
             case "rebuild-data":
@@ -19,10 +19,6 @@ public class Main {
             case "flush-data":
                 MilvusUtil.flushData();
                 System.out.println("flush over");
-                break;
-            case "test-data":
-                SolveUtil.testData(args[1]);
-                System.out.println("test over");
                 break;
         }
     }

@@ -113,12 +113,11 @@ public class MilvusUtil {
                 .build());
     }
 
-    public static void insertData(float[] vector) {
+    public static void insertData(List<List<Float>> data) {
 
         List<Field> fields = new ArrayList<>();
-        fields.add(new InsertParam.Field("vector", floatToList(vector)));
+        fields.add(new InsertParam.Field("vector", data));
         insert(fields);
-
     }
 
 
