@@ -20,6 +20,12 @@ public class Main {
                 MilvusUtil.flushData();
                 System.out.println("flush over");
                 break;
+            case "generate-random-data":
+                int numVectors = Integer.parseInt(args[1]);
+                int vectorDimension = Integer.parseInt(args[2]);
+                MilvusUtil.generateAndInsertRandomData(numVectors, vectorDimension);
+                System.out.println("random data generation and insertion over");
+                break;
         }
     }
 }
