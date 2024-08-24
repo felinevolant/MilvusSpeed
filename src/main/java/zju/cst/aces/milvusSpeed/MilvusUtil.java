@@ -269,12 +269,12 @@ public class MilvusUtil {
                 List<Long> codeIDs = new ArrayList<>();
                 List<List<Float>> vectors = new ArrayList<>();
                 Random random = new Random();
-                for (int j = 0; j < BATCH_SIZE; j++) {
+                for (int j = 0; j < BATCH_SIZE && totalInserted.get() + j < numVectors; j++) {
                     codeIDs.add(System.currentTimeMillis());
                     vectors.add(Arrays.asList(random.nextFloat(), random.nextFloat()));
                 }
                 insertRandomData(codeIDs, vectors);
-                totalInserted.addAndGet(BATCH_SIZE);
+                totalInserted.addAndGet(vectors.size());
                 checkMilestones(totalInserted.get());
             });
         }

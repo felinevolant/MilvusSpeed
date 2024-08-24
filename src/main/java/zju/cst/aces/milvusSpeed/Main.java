@@ -21,7 +21,7 @@ public class Main {
                 System.out.println("flush over");
                 break;
             case "generate-random-data":
-                //java Main generate-random-data 1000
+                //java Main generate-random-data 10000
                 int numVectors = Integer.parseInt(args[1]);
                 //int vectorDimension = Integer.parseInt(args[2]);
                 MilvusUtil.generateAndInsertRandomData(numVectors);
