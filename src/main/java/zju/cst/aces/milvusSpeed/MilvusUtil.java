@@ -34,7 +34,6 @@ public class MilvusUtil {
     private static final long[] MILESTONES = {10000, 100000, 1000000, 10000000, 100000000, 1000000000};
     private static final Map<Long, Long> milestoneTimes = new HashMap<>();
     private static final Logger logger = Logger.getLogger(MilvusUtil.class.getName());
-    private static List<List<Float>> insertedData = new ArrayList<>(); //全局变量 insertedData 来存储插入的数据
 
     static {
         try {
@@ -152,7 +151,6 @@ public class MilvusUtil {
     }
 
     public static void insertData(List<List<Float>> data) {
-        //insertedData.addAll(data); // 这里将数据添加到全局变量 insertedData 中
         List<Field> fields = new ArrayList<>();
         fields.add(new InsertParam.Field("vector", data));
         insert(fields);
@@ -164,7 +162,7 @@ public class MilvusUtil {
                 .withName("codeID")
                 .withDataType(DataType.Int64)
                 .withPrimaryKey(true)
-                .withAutoID(true)
+                .withAutoID(false)
                 .build();
         FieldType vector = FieldType.newBuilder()
                 .withName("vector")
@@ -232,25 +230,6 @@ public class MilvusUtil {
         milvusClient.search(searchParam);
         long endTime = System.nanoTime();
         return endTime - startTime;
-    }
-    // 简单的for循环方法
-    public static void generateAndInsertRandomData1(int numVectors, int vectorDimension) {
-        Random random = new Random();
-        List<List<Float>> data = new ArrayList<>();
-        for (int i = 0; i < numVectors; i++) {
-            List<Float> vector = new ArrayList<>();
-            for(int j = 0; j < vectorDimension; j++) {
-                vector.add(random.nextFloat());
-            }
-            data.add(vector);
-            if (data.size() == 50000) {
-                insertData(data);
-                data.clear();
-            }
-        }
-        if (!data.isEmpty()) {
-            insertData(data);
-        }
     }
     public static void insertRandomData(List<Long> codeIDs, List<List<Float>> vectors) {
         List<Field> fields = new ArrayList<>();
