@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 
@@ -151,7 +152,7 @@ public class MilvusUtil {
     }
 
     public static void insertData(List<List<Float>> data) {
-        insertedData.addAll(data); // 这里将数据添加到全局变量 insertedData 中
+        //insertedData.addAll(data); // 这里将数据添加到全局变量 insertedData 中
         List<Field> fields = new ArrayList<>();
         fields.add(new InsertParam.Field("vector", data));
         insert(fields);
@@ -251,30 +252,31 @@ public class MilvusUtil {
             insertData(data);
         }
     }
+    public static void insertRandomData(List<Long> codeIDs, List<List<Float>> vectors) {
+        List<Field> fields = new ArrayList<>();
+        fields.add(new InsertParam.Field("codeID", codeIDs));
+        fields.add(new InsertParam.Field("vector", vectors));
+        insert(fields);
+    }
     //使用线程池加速
-    public static void generateAndInsertRandomData(int numVectors, int vectorDimension) {
-        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+    public static void generateAndInsertRandomData(int numVectors) {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
         int batches = (numVectors + BATCH_SIZE - 1) / BATCH_SIZE;
-        long totalInserted = 0;
+        AtomicLong totalInserted = new AtomicLong(0);
 
         for (int i = 0; i < batches; i++) {
-            int start = i * BATCH_SIZE;
-            int end = Math.min(start + BATCH_SIZE, numVectors);
             executor.submit(() -> {
-                List<List<Float>> data = new ArrayList<>();
+                List<Long> codeIDs = new ArrayList<>();
+                List<List<Float>> vectors = new ArrayList<>();
                 Random random = new Random();
-                for (int j = start; j < end; j++) {
-                    List<Float> vector = new ArrayList<>();
-                    for (int k = 0; k < vectorDimension; k++) {
-                        vector.add(random.nextFloat());
-                    }
-                    data.add(vector);
+                for (int j = 0; j < BATCH_SIZE; j++) {
+                    codeIDs.add(System.currentTimeMillis());
+                    vectors.add(Arrays.asList(random.nextFloat(), random.nextFloat()));
                 }
-                insertData(data);
+                insertRandomData(codeIDs, vectors);
+                totalInserted.addAndGet(BATCH_SIZE);
+                checkMilestones(totalInserted.get());
             });
-
-            totalInserted += (end - start);
-            checkAndLogMilestones(totalInserted);
         }
 
         executor.shutdown();
@@ -285,27 +287,38 @@ public class MilvusUtil {
         }
     }
 
-    private static void checkAndLogMilestones(long totalInserted) {
+    // 检查是否达到里程碑并测试查询时间
+    private static void checkMilestones(long totalInserted) {
         for (long milestone : MILESTONES) {
-            if (totalInserted >= milestone && !milestoneTimes.containsKey(milestone)) {
-                // 从插入的数据中随机选择一个向量进行搜索
-                float[] vector = getRandomVector();
-                long searchTime = search(vector);
-                milestoneTimes.put(milestone, searchTime);
-                logger.info("Milestone " + milestone + " reached. Search time: " + searchTime + " ns");
+            if (totalInserted >= milestone) {
+                List<float[]> vectors = generateRandomVectors(100); // 随机生成100个向量
+                long totalSearchTime = 0;
+
+                for (float[] vector : vectors) {
+                    long searchTime = search(vector); // 查询并测量时间
+                    totalSearchTime += searchTime;
+                }
+
+                long averageSearchTime = totalSearchTime / vectors.size(); // 计算平均查询时间
+                logger.info("里程碑 " + milestone + " 达成。100个随机向量的平均查询时间: " + averageSearchTime + " ns");
             }
         }
     }
 
-    private static float[] getRandomVector() {
+    // 随机生成指定数量的向量
+    private static List<float[]> generateRandomVectors(int numVectors) {
         Random random = new Random();
-        int randomIndex = random.nextInt(insertedData.size());
-        List<Float> randomVector = insertedData.get(randomIndex);
-        float[] vector = new float[randomVector.size()];
-        for (int i = 0; i < randomVector.size(); i++) {
-            vector[i] = randomVector.get(i);
+        List<float[]> randomVectors = new ArrayList<>();
+
+        for (int i = 0; i < numVectors; i++) {
+            float[] vector = new float[2]; // 假设向量维度为2
+            for (int j = 0; j < vector.length; j++) {
+                vector[j] = random.nextFloat();
+            }
+            randomVectors.add(vector);
         }
-        return vector;
+
+        return randomVectors;
     }
 
 }
