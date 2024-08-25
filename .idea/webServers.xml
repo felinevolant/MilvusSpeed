@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="73b1b52b-24dd-4d8c-b957-790666632fa7" name="graywolf.top">
+        <fileTransfer rootFolder="/data/wzx" accessType="SFTP" host="graywolf.top" port="6579" sshConfigId="e0f3daaa-7625-4bcc-bb68-432b1a7a5c06" sshConfig="wzx@graywolf.top:6579 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

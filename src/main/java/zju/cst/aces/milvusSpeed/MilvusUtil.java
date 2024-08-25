@@ -32,6 +32,7 @@ public class MilvusUtil {
     private static final int BATCH_SIZE = 50000;
     private static final int THREAD_COUNT = 10;
     private static final long[] MILESTONES = {10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+    private static final Set<Long> reachedMilestones = new HashSet<>();
     private static final Map<Long, Long> milestoneTimes = new HashMap<>();
     private static final Logger logger = Logger.getLogger(MilvusUtil.class.getName());
 
@@ -162,7 +163,7 @@ public class MilvusUtil {
                 .withName("codeID")
                 .withDataType(DataType.Int64)
                 .withPrimaryKey(true)
-                .withAutoID(false)
+                .withAutoID(true)
                 .build();
         FieldType vector = FieldType.newBuilder()
                 .withName("vector")
@@ -245,16 +246,24 @@ public class MilvusUtil {
 
         for (int i = 0; i < batches; i++) {
             executor.submit(() -> {
-                List<Long> codeIDs = new ArrayList<>();
+                //List<Long> codeIDs = new ArrayList<>();
                 List<List<Float>> vectors = new ArrayList<>();
                 Random random = new Random();
                 for (int j = 0; j < BATCH_SIZE && totalInserted.get() + j < numVectors; j++) {
-                    codeIDs.add(System.currentTimeMillis());
+                    //codeIDs.add(System.currentTimeMillis());
                     vectors.add(Arrays.asList(random.nextFloat(), random.nextFloat()));
                 }
-                insertRandomData(codeIDs, vectors);
+                //insertRandomData(codeIDs, vectors);
+                insertData(vectors);
                 totalInserted.addAndGet(vectors.size());
                 checkMilestones(totalInserted.get());
+                try {
+                    // 每次插入后休息 0.1 秒
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
             });
         }
 
@@ -269,7 +278,8 @@ public class MilvusUtil {
     // 检查是否达到里程碑并测试查询时间
     private static void checkMilestones(long totalInserted) {
         for (long milestone : MILESTONES) {
-            if (totalInserted >= milestone) {
+            if (totalInserted >= milestone && !reachedMilestones.contains(milestone)) {
+                reachedMilestones.add(milestone);
                 List<float[]> vectors = generateRandomVectors(100); // 随机生成100个向量
                 long totalSearchTime = 0;
 
