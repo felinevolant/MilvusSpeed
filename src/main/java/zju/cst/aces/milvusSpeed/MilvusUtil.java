@@ -276,7 +276,7 @@ public class MilvusUtil {
     }
 
     // 检查是否达到里程碑并测试查询时间
-    private static void checkMilestones(long totalInserted) {
+    public static void checkMilestones(long totalInserted) {
         for (long milestone : MILESTONES) {
             if (totalInserted >= milestone && !reachedMilestones.contains(milestone)) {
                 reachedMilestones.add(milestone);

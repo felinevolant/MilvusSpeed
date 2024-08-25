@@ -27,6 +27,12 @@ public class Main {
                 MilvusUtil.generateAndInsertRandomData(numVectors);
                 System.out.println("random data generation and insertion over");
                 break;
+            case "search-data":
+                //java Main generate-random-data 10000
+                long numVectorsToSearch = Long.parseLong(args[1]);
+                MilvusUtil.checkMilestones(numVectorsToSearch);
+                System.out.println("search "+numVectorsToSearch+" data over");
+                break;
         }
     }
 }
