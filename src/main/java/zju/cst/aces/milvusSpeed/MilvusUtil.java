@@ -14,8 +14,13 @@ import io.milvus.param.dml.InsertParam.Field;
 import io.milvus.param.dml.SearchParam;
 import io.milvus.param.index.CreateIndexParam;
 import io.milvus.response.GetCollStatResponseWrapper;
+import org.openlca.npy.Array2d;
+import org.openlca.npy.Npy;
+import org.openlca.npy.NpyFloatArray;
 
+import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -308,6 +313,17 @@ public class MilvusUtil {
         }
 
         return randomVectors;
+    }
+
+    public static void testData(int numVectors) {
+        long times = 0;
+        List<float[]> vectors = generateRandomVectors(numVectors); // 随机生成n个向量
+        for (float[] vector : vectors) {
+            times += MilvusUtil.search(vector);
+        }
+        double avgTime = times * 1.0 / numVectors / 1000000000;
+        System.out.println("num: " + MilvusUtil.getVectorNum() + ", avg: " + new BigDecimal(Double.toString(avgTime)) + "s");
+        logger.info("在数量级"+MilvusUtil.getVectorNum()+"查询" + numVectors + "次的平均时间: " + new BigDecimal(Double.toString(avgTime)) + "s");
     }
 
 }

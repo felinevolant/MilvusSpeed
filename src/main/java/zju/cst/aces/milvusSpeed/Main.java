@@ -28,11 +28,25 @@ public class Main {
                 System.out.println("random data generation and insertion over");
                 break;
             case "search-data":
-                //java Main generate-random-data 10000
-                long numVectorsToSearch = Long.parseLong(args[1]);
-                MilvusUtil.checkMilestones(numVectorsToSearch);
-                System.out.println("search "+numVectorsToSearch+" data over");
+                int searchCount = Integer.parseInt(args[1]);
+                MilvusUtil.testData(searchCount);
+                System.out.println("search data over");
                 break;
+            /*
+            case "search-data":
+                //java Main generate-random-data 10000
+                //long numVectorsToSearch = Long.parseLong(args[1]);
+                int searchCount = Integer.parseInt(args[1]);
+                double totalAvgTime = 0;
+                for (int i = 0; i < searchCount; i++){
+                    totalAvgTime += MilvusUtil.testData();
+                }
+                double avgTime = totalAvgTime / searchCount;
+                System.out.println(searchCount+"次查询时间: " + avgTime + "s");
+                System.out.println("search data over");
+                break;
+
+             */
         }
     }
 }
