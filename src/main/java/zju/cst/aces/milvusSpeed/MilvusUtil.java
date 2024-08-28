@@ -173,7 +173,7 @@ public class MilvusUtil {
         FieldType vector = FieldType.newBuilder()
                 .withName("vector")
                 .withDataType(DataType.FloatVector)
-                .withDimension(2)
+                .withDimension(8) // 每次改维度之前要修改这里
                 .build();
 
         CreateCollectionParam createCollectionReq = CreateCollectionParam.newBuilder()
@@ -244,7 +244,7 @@ public class MilvusUtil {
         insert(fields);
     }
     //使用线程池加速
-    public static void generateAndInsertRandomData(int numVectors) {
+    public static void generateAndInsertRandomData(int numVectors, int vectorDimension) {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         int batches = (numVectors + BATCH_SIZE - 1) / BATCH_SIZE;
         AtomicLong totalInserted = new AtomicLong(0);
@@ -256,12 +256,16 @@ public class MilvusUtil {
                 Random random = new Random();
                 for (int j = 0; j < BATCH_SIZE && totalInserted.get() + j < numVectors; j++) {
                     //codeIDs.add(System.currentTimeMillis());
-                    vectors.add(Arrays.asList(random.nextFloat(), random.nextFloat()));
+                    List<Float> v = new ArrayList<>();
+                    for (int k = 0; k < vectorDimension; k++) {
+                        v.add(random.nextFloat());
+                    }
+                    vectors.add(v);
                 }
                 //insertRandomData(codeIDs, vectors);
                 insertData(vectors);
                 totalInserted.addAndGet(vectors.size());
-                checkMilestones(totalInserted.get());
+                checkMilestones(totalInserted.get(),vectorDimension);
                 try {
                     // 每次插入后休息 0.1 秒
                     Thread.sleep(100);
@@ -281,11 +285,11 @@ public class MilvusUtil {
     }
 
     // 检查是否达到里程碑并测试查询时间
-    public static void checkMilestones(long totalInserted) {
+    public static void checkMilestones(long totalInserted,int vectorDimension) {
         for (long milestone : MILESTONES) {
             if (totalInserted >= milestone && !reachedMilestones.contains(milestone)) {
                 reachedMilestones.add(milestone);
-                List<float[]> vectors = generateRandomVectors(100); // 随机生成100个向量
+                List<float[]> vectors = generateRandomVectors(100,vectorDimension); // 随机生成100个向量
                 long totalSearchTime = 0;
 
                 for (float[] vector : vectors) {
@@ -294,18 +298,18 @@ public class MilvusUtil {
                 }
 
                 long averageSearchTime = totalSearchTime / vectors.size(); // 计算平均查询时间
-                logger.info("里程碑 " + milestone + " 达成。100个随机向量的平均查询时间: " + averageSearchTime + " ns");
+                logger.info("里程碑 " + milestone + " 达成。100个"+vectorDimension+"维随机向量的平均查询时间: " + averageSearchTime + " ns");
             }
         }
     }
 
     // 随机生成指定数量的向量
-    private static List<float[]> generateRandomVectors(int numVectors) {
+    private static List<float[]> generateRandomVectors(int numVectors,int vectorDimension) {
         Random random = new Random();
         List<float[]> randomVectors = new ArrayList<>();
 
         for (int i = 0; i < numVectors; i++) {
-            float[] vector = new float[2]; // 假设向量维度为2
+            float[] vector = new float[vectorDimension]; // 假设向量维度为2
             for (int j = 0; j < vector.length; j++) {
                 vector[j] = random.nextFloat();
             }
@@ -315,15 +319,15 @@ public class MilvusUtil {
         return randomVectors;
     }
 
-    public static void testData(int numVectors) {
+    public static void testData(int numVectors, int vectorDimension) {
         long times = 0;
-        List<float[]> vectors = generateRandomVectors(numVectors); // 随机生成n个向量
+        List<float[]> vectors = generateRandomVectors(numVectors,vectorDimension); // 随机生成n个向量
         for (float[] vector : vectors) {
             times += MilvusUtil.search(vector);
         }
         double avgTime = times * 1.0 / numVectors / 1000000000;
         System.out.println("num: " + MilvusUtil.getVectorNum() + ", avg: " + new BigDecimal(Double.toString(avgTime)) + "s");
-        logger.info("在数量级"+MilvusUtil.getVectorNum()+"查询" + numVectors + "次的平均时间: " + new BigDecimal(Double.toString(avgTime)) + "s");
+        logger.info("在数量级"+MilvusUtil.getVectorNum()+"查询" + numVectors + "次"+vectorDimension+"维向量的平均时间: " + new BigDecimal(Double.toString(avgTime)) + "s");
     }
 
 }
