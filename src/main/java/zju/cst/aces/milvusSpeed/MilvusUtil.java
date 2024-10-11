@@ -173,7 +173,7 @@ public class MilvusUtil {
         FieldType vector = FieldType.newBuilder()
                 .withName("vector")
                 .withDataType(DataType.FloatVector)
-                .withDimension(8) // 每次改维度之前要修改这里
+                .withDimension(32) // 每次改维度之前要修改这里
                 .build();
 
         CreateCollectionParam createCollectionReq = CreateCollectionParam.newBuilder()
@@ -245,6 +245,8 @@ public class MilvusUtil {
     }
     //使用线程池加速
     public static void generateAndInsertRandomData(int numVectors, int vectorDimension) {
+        long startTime = System.nanoTime(); // 记录开始时间
+
         ExecutorService executor = Executors.newFixedThreadPool(10);
         int batches = (numVectors + BATCH_SIZE - 1) / BATCH_SIZE;
         AtomicLong totalInserted = new AtomicLong(0);
@@ -262,10 +264,9 @@ public class MilvusUtil {
                     }
                     vectors.add(v);
                 }
-                //insertRandomData(codeIDs, vectors);
                 insertData(vectors);
                 totalInserted.addAndGet(vectors.size());
-                checkMilestones(totalInserted.get(),vectorDimension);
+                //checkMilestones(totalInserted.get(),vectorDimension);
                 try {
                     // 每次插入后休息 0.1 秒
                     Thread.sleep(100);
@@ -282,6 +283,10 @@ public class MilvusUtil {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        long endTime = System.nanoTime(); // 记录结束时间
+        long totalTime = ( endTime - startTime ); // 计算总时间
+        System.out.println("插入 " + numVectors + " 个向量所花的总时间: " + totalTime + " ns");
+        logger.info("插入 " + numVectors + " 个"+vectorDimension+"维向量所花的总时间: " + totalTime + "ns");
     }
 
     // 检查是否达到里程碑并测试查询时间
